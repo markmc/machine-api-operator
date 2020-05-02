@@ -35,6 +35,8 @@ const (
 
 	// Indicates that the metal3 deployment is being managed by cluster-baremetal-operator
 	cboOwnedAnnotation = "baremetal.openshift.io/owned"
+	// The name of the clusteroperator for cluster-baremetal-operator
+	cboClusterOperatorName = "baremetal"
 )
 
 // Operator defines machine api operator.

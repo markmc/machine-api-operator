@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	osclientset "github.com/openshift/client-go/config/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -125,6 +126,18 @@ func checkMetal3DeploymentOwned(client appsclientv1.DeploymentsGetter, config *O
 	}
 	if _, exists := existing.ObjectMeta.Annotations[cboOwnedAnnotation]; exists {
 		return false, nil
+	}
+	return true, nil
+}
+
+// Return true if the baremetal clusteroperator exists
+func checkForBaremetalClusterOperator(osClient osclientset.Interface) (bool, error) {
+	_, err := osClient.ConfigV1().ClusterOperators().Get(context.Background(), cboClusterOperatorName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
 	}
 	return true, nil
 }
