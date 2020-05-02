@@ -117,6 +117,15 @@ func (optr *Operator) syncTerminationHandler(config *OperatorConfig) error {
 }
 
 func (optr *Operator) syncBaremetalControllers(config *OperatorConfig) error {
+	owned, err := checkMetal3DeploymentOwned(optr.kubeClient.AppsV1(), config)
+	if err != nil {
+		return err
+	}
+	if !owned {
+		glog.Infof("cluster-baremetal-operator is managing the Metal3 deployment, standing down.")
+		return nil
+	}
+
 	// Try to get baremetal provisioning config from a CR
 	baremetalProvisioningConfig, err := getBaremetalProvisioningConfig(optr.dynamicClient, baremetalProvisioningCR)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsclientv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	coreclientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/pointer"
 )
@@ -111,6 +112,21 @@ func createMariadbPasswordSecret(client coreclientv1.SecretsGetter, config *Oper
 		return err
 	}
 	return err
+}
+
+// Return false on error or if "baremetal.openshift.io/owned" annotation set
+func checkMetal3DeploymentOwned(client appsclientv1.DeploymentsGetter, config *OperatorConfig) (bool, error) {
+	existing, err := client.Deployments(config.TargetNamespace).Get(context.Background(), "metal3", metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	}
+	if _, exists := existing.ObjectMeta.Annotations[cboOwnedAnnotation]; exists {
+		return false, nil
+	}
+	return true, nil
 }
 
 func newMetal3Deployment(config *OperatorConfig, baremetalProvisioningConfig BaremetalProvisioningConfig) *appsv1.Deployment {
